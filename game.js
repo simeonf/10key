@@ -24,13 +24,11 @@ Bucket.prototype.draw = function(processing){
         }
     processing.rect(this.x, this.y, this.width, this.height );
     processing.fill(255, 0, 0);
-    processing.text(this.count, this.x + 10, this.y + 20);
     };
 
 Bucket.prototype.contained = function(obj){
     return this.floor <= (obj.y + obj.height);
 };
-
 
 
 var Problem = function(width, height, bucket){
@@ -55,7 +53,6 @@ Problem.prototype.KABOOM = 2;
 
 Problem.prototype.boom = function(){
     this.state = this.KABOOM;
-    this.bucket.count += 1;
 };
 
 Problem.prototype.draw = function(processing){
@@ -77,16 +74,15 @@ Problem.prototype.draw = function(processing){
         processing.fill(255, 0, 0);
         }
     else{
-        processing.fill(0, 176, 86);
+        processing.fill(255);
     }
     processing.rect(this.x, this.y, this.width, this.height, 4);
-    processing.fill(255, 0, 0);
-    processing.text(this.text + "( " + this.zombie +  ", " + this.state + ")", this.x + 10, this.y + 20);
+    processing.fill(0);
+    processing.text(this.text, this.x + 10, this.y + 20);
 }
 
 function sketchProc(p) {
-  // Override draw function, by default it will be called 60 times per second
-    var height = 300;
+    var height = 600;
     var width = 1024;
     var num_buckets = 5;
     var buckets = [];
@@ -106,8 +102,30 @@ function sketchProc(p) {
        }
        p.smooth();
     }
+    var add_problem = function(){
+        // Add a problem if needed
+        var prob = _.findWhere(problems, {state: Problem.prototype.FALLING});
+        if(_.isUndefined(prob)){
+            var bucket_with_room = _.sample(_.where(buckets, {'full': false})); // randomly pick a bucket that's not stacked up
+            if(!_.isUndefined(bucket_with_room)){
+                problems.push(new Problem(150, 30, bucket_with_room));
+                }
+            }
+    };
+
+    var check_game_over = function(){
+        // check to see if the game is over.
+        if(_.where(buckets, {'full': true}).length === buckets.length){
+            p.fill(0, 255, 0);
+            p.textFont(fontA, 150);
+            p.text("GAME OVER!", 60, height / 2 + 100);
+            p.noLoop();
+        }
+    };
+    
     // main draw loop
     var answer = '';
+    var frame_counter = 0;
     p.draw = function() {
         // draw the background
         p.background(0);
@@ -115,26 +133,16 @@ function sketchProc(p) {
         for(var i=0;i<buckets.length;i++){
             buckets[i].draw(p);
         }
+        
         // Add a problem if needed
-        var prob = _.findWhere(problems, {state: Problem.prototype.FALLING});
-        if(_.isUndefined(prob)){
-            problems.push(new Problem(150, 30, _.sample(buckets)));
-            }
-        // Remove a problem if needed
+        add_problem();
+        
+        // Remove zombied problems and draw the rest
         problems = _.filter(problems, function (prob){return prob.zombie < 10;});
-        var prob = _.findWhere(problems, {state: Problem.prototype.FALLING});
-        // draw problems
         for(var i=0;i<problems.length;i++){
             var prob = problems[i];
             prob.draw(p);
         }
-        // check to see if the game is over.
-        if(_.where(buckets, {'full': true}).length === buckets.length){
-            p.fill(0, 255, 0);
-            p.textFont(fontA, 150);
-            p.text("GAME OVER!", 60, height / 2 + 100);
-            p.noLoop();
-            }
         // Draw current answer and score
         // Draw score
         p.fill(0, 255, 0);
@@ -146,6 +154,7 @@ function sketchProc(p) {
             p.text(answer, width - 120, 60);
             }
         p.textFont(fontA, font_size);
+        check_game_over();
     };
     
     // handle typing
