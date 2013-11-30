@@ -56,6 +56,9 @@ Bucket.prototype.contained = function(obj){
     return this.floor <= (obj.y + obj.height);
 };
 
+var explosion_snd = new Audio("resources/explosion.wav");
+var land_snd = new Audio("resources/land.wav");
+var new_snd = new Audio("resources/new.wav");
 
 var Problem = function(bucket, speed, text, answer){
     this.state = this.FALLING;
@@ -76,6 +79,7 @@ Problem.prototype.STOPPED = 1;
 Problem.prototype.KABOOM = 2;
 
 Problem.prototype.boom = function(){
+    explosion_snd.play();
     this.state = this.KABOOM;
 };
 
@@ -85,6 +89,7 @@ Problem.prototype.draw = function(processing){
         this.state = this.STOPPED;
         this.bucket.floor -= (this.height +3); // raise the level of the bucket
         this.bucket.count += 1; // and tell the bucket its got a problem in it
+        land_snd.play();
         }
     else if(this.state === this.FALLING){
         this.y += this.speed;
@@ -142,6 +147,7 @@ function sketchProc(p) {
                 var lev = calculate_level(difficulty, level);
                 console.log(lev);
                 problems.push(new Problem(bucket_with_room, lev.speed, lev.text, lev.answer));
+                new_snd.play();
                 }
             }
     };
@@ -167,8 +173,8 @@ function sketchProc(p) {
             }
     };
     p.draw = function() {
-        // increment the frame counter. Every 30 frames we can add a problem/check for game done...
-        frame_counter =  (frame_counter + 1) % 30;
+        // increment the frame counter. Every X num frames we can add a problem/check for game done...
+        frame_counter =  (frame_counter + 1) % 90;
         // draw the background
         p.background(Colors.Black);
         // draw buckets
