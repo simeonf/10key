@@ -1,0 +1,38 @@
+body{
+      background: url("Clouds.jpg") #000 no-repeat;
+      
+      }
+
+#game-container{
+                 float:left;
+                 width:1024px;
+                 height:600px;
+                 background-color:black;
+                 }
+#game{
+       border:2px inset #666;
+       border-radius: 4px;
+       border-right:0px;
+       height:600px;
+       width:1024px;
+}
+#instructions{
+               float:left;
+               width:200px;
+               height:580px;
+               padding:10px 10px;
+               background-color: #FFF;
+               border:2px inset #666;
+               border-radius: 4px;
+               border-left:0px;
+               font-family:'Press Start 2p', cursive;
+               font-size:12px;
+               line-height:18px;
+}
+h1{ height:140px;
+    line-height: 80px;
+    font-size:24px;
+    margin:0px;
+    padding:0px;
+    font-family:'Press Start 2p', cursive;
+}
