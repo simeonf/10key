@@ -1,5 +1,6 @@
 var DEBUG = false;
 
+
 var Bucket = function(width, height, bucket_number, top){
     this.width = width - 10;
     this.height = height;
@@ -15,15 +16,14 @@ var Bucket = function(width, height, bucket_number, top){
 Bucket.prototype.draw = function(processing){
     if(this.count > this.max){
         this.full = true;
-        processing.fill(100);
-        processing.stroke(255, 0, 0);
+        processing.fill(Colors.OliveDrab);
+        processing.stroke(Colors.Black);
         }
     else{
-        processing.fill(200);
-        processing.stroke(255);
+        processing.fill(Colors.Yellow);
+        processing.stroke(Colors.Black);
         }
     processing.rect(this.x, this.y, this.width, this.height );
-    processing.fill(255, 0, 0);
     };
 
 Bucket.prototype.contained = function(obj){
@@ -31,20 +31,20 @@ Bucket.prototype.contained = function(obj){
 };
 
 
-var Problem = function(width, height, bucket){
+var Problem = function(width, height, bucket, speed){
     var operator = _.sample(["+", "-"]);
     var left = _.sample(_.range(0, 9));
     var right = _.sample(_.range(0, 9));
     this.text = left + " " + operator + " " + right;
     this.answer = String(eval(this.text));
     this.state = this.FALLING;
-    this.speed = 3;
     this.y = 0;
     this.x = bucket.x + 1 + Math.random() * (bucket.width - width -1); // some fudging
     this.width = width;
     this.height = height;
     this.bucket = bucket;
     this.zombie = 0; // counter when dead
+    this.speed = speed;
     };
 
 Problem.prototype.FALLING = 0;
@@ -56,7 +56,6 @@ Problem.prototype.boom = function(){
 };
 
 Problem.prototype.draw = function(processing){
-    processing.fill(0, 176, 86);
     processing.stroke(0);
     if(this.state === this.FALLING && this.bucket.contained(this)){
         this.state = this.STOPPED;
@@ -71,13 +70,13 @@ Problem.prototype.draw = function(processing){
         }
 
     if(this.zombie > 0){
-        processing.fill(255, 0, 0);
+        processing.fill(Colors.Red);
         }
     else{
-        processing.fill(255);
+        processing.fill(Colors.White);
     }
     processing.rect(this.x, this.y, this.width, this.height, 4);
-    processing.fill(0);
+    processing.fill(Colors.Black);
     processing.text(this.text, this.x + 10, this.y + 20);
 }
 
@@ -88,27 +87,35 @@ function sketchProc(p) {
     var buckets = [];
     var problems = [];
     var font_size = 20;
+    var answer = '';
+    var frame_counter = 0;
+    var speed = 1;
+    var difficulty = 0;
+    var level = 0;
+    var number_problems = 0;
+
     // default font
     var fontA = p.loadFont("Courier New");
     var score = 0;
-    p.textFont(fontA, font_size);
-
     p.setup = function() {
-       p.size(width, height);
-       p.background(0);
-       var bucket_width = width / num_buckets;
-       for(var i=0;i<num_buckets;i++){
-           buckets.push(new Bucket(bucket_width, 75, i, height - 80));
-       }
-       p.smooth();
+        p.size(width, height);
+        p.background(0);
+        var bucket_width = width / num_buckets;
+        for(var i=0;i<num_buckets;i++){
+            buckets.push(new Bucket(bucket_width, 75, i, height - 80));
+        }
+        p.smooth();
+        p.frameRate(30);
     }
-    var add_problem = function(){
+    // main draw loop and helpers
+
+    var add_problem = function(difficulty, level){
         // Add a problem if needed
         var prob = _.findWhere(problems, {state: Problem.prototype.FALLING});
         if(_.isUndefined(prob)){
             var bucket_with_room = _.sample(_.where(buckets, {'full': false})); // randomly pick a bucket that's not stacked up
             if(!_.isUndefined(bucket_with_room)){
-                problems.push(new Problem(150, 30, bucket_with_room));
+                problems.push(new Problem(110, 30, bucket_with_room, 1));
                 }
             }
     };
@@ -116,44 +123,43 @@ function sketchProc(p) {
     var check_game_over = function(){
         // check to see if the game is over.
         if(_.where(buckets, {'full': true}).length === buckets.length){
-            p.fill(0, 255, 0);
+            p.fill(Colors.Lime);
             p.textFont(fontA, 150);
             p.text("GAME OVER!", 60, height / 2 + 100);
             p.noLoop();
         }
     };
     
-    // main draw loop
-    var answer = '';
-    var frame_counter = 0;
+    var score_and_answer = function(){
+        p.fill(Colors.Lime);
+        p.textFont(fontA, 50);
+        p.text(score, 10, 60);
+        if(answer.length > 0){
+            p.fill(Colors.Red);
+            p.textFont(fontA, 50);
+            p.text(answer, width - 120, 60);
+            }
+    };
     p.draw = function() {
+        // increment the frame counter. Every 30 frames we can add a problem/check for game done...
+        frame_counter =  (frame_counter + 1) % 30;
         // draw the background
-        p.background(0);
+        p.background(Colors.Black);
         // draw buckets
         for(var i=0;i<buckets.length;i++){
             buckets[i].draw(p);
         }
-        
-        // Add a problem if needed
-        add_problem();
-        
+        if(frame_counter === 0){
+            add_problem(difficulty, level);
+            }
         // Remove zombied problems and draw the rest
         problems = _.filter(problems, function (prob){return prob.zombie < 10;});
+        p.textFont(fontA, font_size);
         for(var i=0;i<problems.length;i++){
             var prob = problems[i];
             prob.draw(p);
         }
-        // Draw current answer and score
-        // Draw score
-        p.fill(0, 255, 0);
-        p.textFont(fontA, 50);
-        p.text(score, 10, 60);
-        if(answer.length > 0){
-            p.fill(255, 0, 0);
-            p.textFont(fontA, 50);
-            p.text(answer, width - 120, 60);
-            }
-        p.textFont(fontA, font_size);
+        score_and_answer();
         check_game_over();
     };
     
@@ -172,5 +178,4 @@ function sketchProc(p) {
             answer += String(p.key);
         }
     };
-
 }
