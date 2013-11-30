@@ -1,5 +1,31 @@
-var DEBUG = false;
+var calculate_level = function(difficulty, level){
+    // ignore difficulty for now.
+    levels = [{'speed': 1, operators: ["+"], left: _.range(1, 5), right: _.range(1, 4), positive: true},
+              {'speed': 2, operators: ["+"], left: _.range(1, 5), right: _.range(1, 4), positive: true},
+              
+              {'speed': 1, operators: ["+"], left: _.range(1, 10), right: _.range(1, 10), positive: true},
+              {'speed': 2, operators: ["+"], left: _.range(1, 10), right: _.range(1, 10), positive: true},
+              
+              {'speed': 1, operators: ["+", "-"], left: _.range(1, 10), right: _.range(1, 10), positive: true},
+              {'speed': 2, operators: ["+", "-"], left: _.range(1, 10), right: _.range(1, 10), positive: true},
+              {'speed': 3, operators: ["+", "-"], left: _.range(1, 10), right: _.range(1, 10), positive: true},
 
+              {'speed': 1, operators: ["+", "-"], left: _.range(1, 10), right: _.range(1, 10), positive: false},
+              {'speed': 2, operators: ["+", "-"], left: _.range(1, 10), right: _.range(1, 10), positive: false},
+              {'speed': 3, operators: ["+", "-"], left: _.range(1, 10), right: _.range(1, 10), positive: false}];
+
+    var level = this.levels[level] || _.last(levels);
+    var operator = _.sample(level.operators);
+    var left = _.sample(level.left);
+    var right = _.sample(level.right);
+    if(level.positive && operator == "-"){
+        right = _.min([left + 1, right])
+        }
+
+    var text = left + " " + operator + " " + right;
+    var answer = String(eval(text));
+    return {'text': text, 'answer': answer, 'speed': level.speed};
+};
 
 var Bucket = function(width, height, bucket_number, top){
     this.width = width - 10;
@@ -31,19 +57,17 @@ Bucket.prototype.contained = function(obj){
 };
 
 
-var Problem = function(width, height, bucket, speed){
-    var operator = _.sample(["+", "-"]);
-    var left = _.sample(_.range(0, 9));
-    var right = _.sample(_.range(0, 9));
-    this.text = left + " " + operator + " " + right;
-    this.answer = String(eval(this.text));
+var Problem = function(bucket, speed, text, answer){
     this.state = this.FALLING;
+    this.width = 110;
+    this.height = 30;
     this.y = 0;
-    this.x = bucket.x + 1 + Math.random() * (bucket.width - width -1); // some fudging
-    this.width = width;
-    this.height = height;
+    this.x = bucket.x + 1 + Math.random() * (bucket.width - this.width -1); // some fudging
     this.bucket = bucket;
     this.zombie = 0; // counter when dead
+    this.speed = speed;
+    this.text = text;
+    this.answer = answer;
     this.speed = speed;
     };
 
@@ -115,7 +139,9 @@ function sketchProc(p) {
         if(_.isUndefined(prob)){
             var bucket_with_room = _.sample(_.where(buckets, {'full': false})); // randomly pick a bucket that's not stacked up
             if(!_.isUndefined(bucket_with_room)){
-                problems.push(new Problem(110, 30, bucket_with_room, 1));
+                var lev = calculate_level(difficulty, level);
+                console.log(lev);
+                problems.push(new Problem(bucket_with_room, lev.speed, lev.text, lev.answer));
                 }
             }
     };
@@ -150,7 +176,8 @@ function sketchProc(p) {
             buckets[i].draw(p);
         }
         if(frame_counter === 0){
-            add_problem(difficulty, level);
+            level = parseInt(p.frameCount / (30 * 20)); // level based on time
+            add_problem(difficulty, level); 
             }
         // Remove zombied problems and draw the rest
         problems = _.filter(problems, function (prob){return prob.zombie < 10;});
