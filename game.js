@@ -68,7 +68,6 @@ function sketchProc(p) {
             var bucket_with_room = _.sample(_.where(buckets, {'full': false})); // randomly pick a bucket that's not stacked up
             if(!_.isUndefined(bucket_with_room)){
                 var lev = calculate_level(difficulty, level);
-                console.log(lev);
                 problems.push(new Problem(bucket_with_room, lev));
                 new_snd.play();
                 }
