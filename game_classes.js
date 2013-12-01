@@ -13,7 +13,7 @@ var Bucket = function(width, height, bucket_number, top){
 Bucket.prototype.draw = function(processing){
     if(this.count > this.max){
         this.full = true;
-        processing.fill(Colors.OliveDrab);
+        processing.fill(Colors.DimGray);
         processing.stroke(Colors.Black);
         }
     else{
