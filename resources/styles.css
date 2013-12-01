@@ -13,6 +13,7 @@ body{
        border:2px inset #666;
        border-radius: 4px;
        border-right:0px;
+       border-top:0px;
        height:600px;
        width:1024px;
 }
