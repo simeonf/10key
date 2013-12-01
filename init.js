@@ -20,13 +20,12 @@ document.addEventListener("DOMContentLoaded", function(event) {
             else{
                 err_snd.play();
             }
-
-
         }
         else{
             go.value = "Pause";
             processing.loop();
         }
+        canvas.focus()
     });
 
 });
