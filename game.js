@@ -1,3 +1,5 @@
+var level_snd = new Audio("resources/levelup.wav");
+var error_snd = new Audio("resources/error.wav");
 var calculate_level = function(difficulty, level){
     // ignore difficulty for now.
     levels = [{'speed': 1, operators: ["+"], left: _.range(1, 5), right: _.range(1, 4), positive: true},
@@ -52,7 +54,7 @@ function sketchProc(p) {
     p.setup = function() {
         p.size(width, height);
         p.background(0);
-        var bucket_width = width / num_buckets;
+        var bucket_width = (width - 120) / num_buckets;
         for(var i=0;i<num_buckets;i++){
             buckets.push(new Bucket(bucket_width, 75, i, height - 80));
         }
@@ -84,14 +86,15 @@ function sketchProc(p) {
         }
     };
     
-    var score_and_answer = function(){
+    var game_menu = function(){
         p.fill(Colors.Lime);
-        p.textFont(fontA, 50);
-        p.text(score, 10, 60);
+        p.textFont(fontA, 20);
+        p.text("Score:" + score, width - 120 , height - 65);
+        p.text("Level:" + level, width - 120 , height - 40);
         if(answer.length > 0){
             p.fill(Colors.Red);
             p.textFont(fontA, 50);
-            p.text(answer, width - 120, 60);
+            p.text(answer, width - 110, 60);
             }
     };
     p.draw = function() {
@@ -104,7 +107,11 @@ function sketchProc(p) {
             buckets[i].draw(p);
         }
         if(frame_counter === 0){
-            level = parseInt(p.frameCount / (30 * 20)); // level based on time
+            var new_level = parseInt(p.frameCount / (30 * 20)); // level based on time
+            if(new_level > level){
+                level_snd.play();
+            }
+            level = new_level;
             add_problem(difficulty, level); 
             }
         // Remove zombied problems and draw the rest
@@ -114,12 +121,13 @@ function sketchProc(p) {
             var prob = problems[i];
             prob.draw(p);
         }
-        score_and_answer();
+        game_menu();
         check_game_over();
     };
     
     // handle typing
     p.keyPressed = function(){
+        console.log(p.key.code);
         if(p.key.code == 10){
             // Check and see if answer is correct
             var prob = _.findWhere(problems, {'state': Problem.prototype.FALLING});
@@ -127,6 +135,9 @@ function sketchProc(p) {
                 prob.boom();
                 score += 1;
                 }
+            else{
+                error_snd.play();
+            }
             answer = '';
         }
         else{
